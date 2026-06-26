@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twitch Chat Top 3 — OBS Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body, html {
+      background: transparent;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    }
+
+    #root {
+      padding: 12px;
+      min-width: 300px;
+      max-width: 360px;
+      background: transparent;
+    }
+
+    #title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #adadb8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      padding-left: 4px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+
+    #list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(14, 14, 16, 0.88);
+      border-radius: 8px;
+      padding: 10px 14px;
+      backdrop-filter: blur(8px);
+      animation: slideIn 0.4s ease both;
+      border-left-width: 3px;
+      border-left-style: solid;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .medal {
+      font-size: 20px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+    }
+
+    .name {
+      font-size: 15px;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+
+    .count {
+      font-size: 14px;
+      font-weight: 800;
+      color: #9147ff;
+      flex-shrink: 0;
+      text-shadow: 0 0 8px #9147ff66;
+    }
+
+    #waiting {
+      background: rgba(14, 14, 16, 0.85);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #adadb8;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+    }
+
+    #waiting strong { color: #9147ff; }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div id="title">💬 Топ чаттеров</div>
+  <div id="list">
+    <div id="waiting">Подключение к чату...</div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ────────────────────────────────────────────────────────────────
+  // Канал берётся из ?channel=xxx в URL. Если не задан — grishatripak
+  const params = new URLSearchParams(location.search);
+  const CHANNEL = (params.get('channel') || 'grishatripak').toLowerCase();
+
+  const MEDALS      = ['🥇', '🥈', '🥉'];
+  const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
+  const MEDAL_GLOW  = [
+    '0 0 12px #FFD70088',
+    '0 0 12px #C0C0C088',
+    '0 0 12px #CD7F3288',
+  ];
+
+  // ── STATE ─────────────────────────────────────────────────────────────────
+  const chatters = {};   // { username: { displayName, count, color } }
+
+  // ── DOM ───────────────────────────────────────────────────────────────────
+  const listEl = document.getElementById('list');
+
+  function render() {
+    const top3 = Object.values(chatters)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    if (top3.length === 0) {
+      listEl.innerHTML = `<div id="waiting">Ждём сообщений в <strong>#${CHANNEL}</strong></div>`;
+      return;
+    }
+
+    listEl.innerHTML = top3.map((c, i) => `
+      <div class="row" style="
+        border-left-color: ${MEDAL_COLORS[i]};
+        box-shadow: ${MEDAL_GLOW[i]};
+        animation-delay: ${i * 0.1}s;
+      ">
+        <span class="medal">${MEDALS[i]}</span>
+        <span class="name" style="color:${c.color || '#dedee3'}">${escHtml(c.displayName)}</span>
+        <span class="count">${c.count.toLocaleString()}</span>
+      </div>
+    `).join('');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── TWITCH IRC ────────────────────────────────────────────────────────────
+  function connect() {
+    const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+    ws.onopen = () => {
+      ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+      ws.send(`NICK justinfan${Math.floor(Math.random() * 99999)}`);
+      ws.send(`JOIN #${CHANNEL}`);
+    };
+
+    ws.onmessage = (event) => {
+      const lines = event.data.split('\r\n');
+      for (const line of lines) {
+        if (!line) continue;
+
+        if (line.startsWith('PING')) {
+          ws.send('PONG :tmi.twitch.tv');
+          continue;
+        }
+
+        let tags = {};
+        let rest = line;
+
+        if (line.startsWith('@')) {
+          const si = line.indexOf(' ');
+          const tagStr = line.slice(1, si);
+          rest = line.slice(si + 1);
+          for (const part of tagStr.split(';')) {
+            const eq = part.indexOf('=');
+            if (eq !== -1) tags[part.slice(0, eq)] = part.slice(eq + 1);
+          }
+        }
+
+        if (rest.includes('PRIVMSG')) {
+          const m = rest.match(/^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/);
+          if (!m) continue;
+
+          const username    = m[1].toLowerCase();
+          const displayName = tags['display-name'] || username;
+          const color       = tags['color'] || undefined;
+
+          const prev = chatters[username];
+          chatters[username] = {
+            displayName,
+            count: (prev ? prev.count : 0) + 1,
+            color: color || (prev && prev.color),
+          };
+
+          render();
+        }
+      }
+    };
+
+    ws.onclose = () => setTimeout(connect, 5000); // авто-переподключение
+    ws.onerror = () => ws.close();
+  }
+
+  connect();
+  render();
+</script>
+</body>
+</html>
