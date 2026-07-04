@@ -2,336 +2,367 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>TOP 3 CHATTERS — grishatripak</title>
+<title>ДОНАТОФОН И ВРЕМЯ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Rubik:wght@500;700&display=swap');
-
   :root{
-    --accent:#9146FF;
-    --accent2:#bf94ff;
-    --gold:#FFD700;
-    --silver:#C0C0C0;
-    --bronze:#CD7F32;
-    --bg:transparent;
+    --bg1:#0b0a1a; --bg2:#1a0f2e; --neon:#ff2ec4; --neon2:#7c4dff;
+    --gold:#ffd166; --gray:#8a8aa3; --ok:#3ddc84; --bad:#ff5470;
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{
-    background: var(--bg);
-    font-family:'Rubik', sans-serif;
-    overflow:hidden;
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden;
+    font-family:'Segoe UI',Arial,sans-serif;}
+  body{
+    width:420px; min-height:280px; padding:18px 20px 20px;
+    background:radial-gradient(circle at 30% 0%, #2a1a44 0%, var(--bg2) 45%, var(--bg1) 100%);
+    border-radius:22px; color:#fff; position:relative;
+    box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 20px 60px rgba(0,0,0,.55);
   }
-  #wrap{
-    width:420px;
-    padding:18px 20px 20px 20px;
-    position:relative;
+  .status-dot{
+    position:absolute; top:14px; right:16px; width:9px; height:9px; border-radius:50%;
+    background:var(--bad); box-shadow:0 0 8px var(--bad);
   }
-  #title{
-    font-family:'Montserrat', sans-serif;
-    font-weight:900;
-    font-size:22px;
-    letter-spacing:1px;
-    color:#fff;
-    text-transform:uppercase;
-    text-shadow: 0 0 8px var(--accent2), 0 0 18px rgba(145,70,255,0.6);
-    display:flex;
-    align-items:center;
-    gap:8px;
+  .status-dot.on{background:var(--ok); box-shadow:0 0 8px var(--ok);}
+  .status-dot.mid{background:var(--gold); box-shadow:0 0 8px var(--gold);}
+
+  h1{
+    margin:0 0 2px; text-align:center; font-size:23px; letter-spacing:2px;
+    font-weight:800; text-transform:uppercase;
+    background:linear-gradient(90deg,var(--neon),var(--neon2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 24px rgba(255,46,196,.35);
   }
-  #subtitle{
-    font-size:12px;
-    color:#c7aeff;
-    margin-top:2px;
-    margin-bottom:14px;
-    letter-spacing:0.5px;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  #dot{
-    width:8px; height:8px; border-radius:50%;
-    background:#ff4444;
-    box-shadow:0 0 6px #ff4444;
-    transition:all .3s ease;
-  }
-  #dot.live{
-    background:var(--accent2);
-    box-shadow:0 0 8px var(--accent2), 0 0 16px var(--accent2);
-    animation:pulse 1.4s infinite;
-  }
-  @keyframes pulse{
-    0%,100%{ opacity:1; }
-    50%{ opacity:0.4; }
+  h1 .and{
+    display:block; font-size:12px; letter-spacing:5px; color:var(--gray);
+    -webkit-text-fill-color:var(--gray); margin:2px 0;
   }
 
-  .row{
-    position:relative;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    background:linear-gradient(90deg, rgba(28,18,45,0.85), rgba(18,12,28,0.55));
-    border:1px solid rgba(145,70,255,0.3);
-    border-radius:10px;
-    padding:10px 14px;
-    margin-bottom:10px;
-    overflow:hidden;
-    transition: transform .35s ease, box-shadow .35s ease;
+  .clock{
+    text-align:center; font-family:'Consolas','Courier New',monospace;
+    font-size:40px; font-weight:700; letter-spacing:3px; margin:6px 0 14px;
+    color:#fff; text-shadow:0 0 18px rgba(124,77,255,.55);
   }
-  .row:hover{ transform: translateX(2px); }
-  .row .bar{
-    position:absolute;
-    left:0; top:0; bottom:0;
-    background:linear-gradient(90deg, rgba(145,70,255,0.4), rgba(191,148,255,0.08));
-    width:0%;
-    transition: width .6s cubic-bezier(.22,1,.36,1);
-    z-index:0;
+  .clock .date{
+    display:block; font-family:'Segoe UI',Arial,sans-serif; font-size:12px;
+    letter-spacing:1px; color:var(--gray); font-weight:400; margin-top:2px;
   }
-  .rank{
-    font-family:'Montserrat', sans-serif;
-    font-weight:900;
-    font-size:20px;
-    width:30px;
-    text-align:center;
-    z-index:1;
-  }
-  .rank.r1{ color:var(--gold); text-shadow:0 0 10px rgba(255,215,0,0.8); }
-  .rank.r2{ color:var(--silver); text-shadow:0 0 8px rgba(192,192,192,0.7); }
-  .rank.r3{ color:var(--bronze); text-shadow:0 0 8px rgba(205,127,50,0.7); }
 
-  .info{
-    flex:1;
-    z-index:1;
-    min-width:0;
+  .phone-wrap{ display:flex; justify-content:center; margin:4px 0 10px; }
+  .phone{
+    font-size:54px; filter:drop-shadow(0 0 10px rgba(255,46,196,.4));
+    transition:transform .15s;
   }
-  .name{
-    font-weight:700;
-    font-size:15px;
-    color:#fff;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    text-shadow:0 1px 2px rgba(0,0,0,0.6);
+  .phone.ring{ animation:ring .35s ease-in-out 6; }
+  @keyframes ring{
+    0%,100%{transform:rotate(0deg);}
+    20%{transform:rotate(-18deg);}
+    40%{transform:rotate(14deg);}
+    60%{transform:rotate(-10deg);}
+    80%{transform:rotate(8deg);}
   }
-  .count{
-    font-family:'Montserrat', sans-serif;
-    font-weight:800;
-    font-size:16px;
-    color:var(--accent2);
-    z-index:1;
-    text-shadow:0 0 6px rgba(145,70,255,0.5);
-    min-width:34px;
-    text-align:right;
+
+  .card{
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
+    border-radius:16px; padding:14px 16px; min-height:70px;
+    display:flex; flex-direction:column; gap:4px; justify-content:center;
+    transition:all .25s;
   }
-  .empty{
-    color:#8a76b3;
-    font-size:13px;
-    font-style:italic;
-    padding:6px 4px 2px 4px;
+  .card.flash{ border-color:var(--neon); box-shadow:0 0 26px rgba(255,46,196,.35); }
+  .card .empty{ color:var(--gray); text-align:center; font-size:14px; }
+  .card .from{ font-size:13px; color:var(--gray); letter-spacing:.5px; }
+  .card .name{ font-size:19px; font-weight:700; color:#fff; }
+  .card .amount{ font-size:22px; font-weight:800; color:var(--gold); }
+  .card .msg{ font-size:14px; color:#e6e0f5; font-style:italic; word-break:break-word; }
+
+  .history{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .history .row{
+    display:flex; justify-content:space-between; font-size:12px; color:var(--gray);
+    padding:4px 8px; border-radius:8px; background:rgba(255,255,255,.03);
   }
-  #footer{
-    display:flex;
-    justify-content:space-between;
-    font-size:11px;
-    color:#a894d1;
-    margin-top:6px;
-    letter-spacing:0.4px;
+  .history .row b{ color:#d9d3f0; font-weight:600; }
+
+  /* ── config / login screen ── */
+  .setup{ font-size:13px; line-height:1.5; color:#ded9f0; }
+  .setup h2{ font-size:15px; margin:0 0 10px; color:#fff; }
+  .setup ol{ padding-left:20px; margin:0 0 12px; }
+  .setup a{ color:#9fc8ff; }
+  .setup input{
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06); color:#fff; font-size:13px; margin:6px 0 10px;
   }
+  .setup button{
+    width:100%; padding:11px; border-radius:10px; border:none; cursor:pointer;
+    background:linear-gradient(90deg,var(--neon),var(--neon2)); color:#fff;
+    font-weight:700; font-size:14px; letter-spacing:.5px;
+  }
+  .setup button:disabled{ opacity:.4; cursor:not-allowed; }
+  .setup .hint{ font-size:11px; color:var(--gray); margin-top:8px; }
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
 
-<div id="wrap">
-  <div id="title">TOP 3 ЧАТТЕРА</div>
-  <div id="subtitle"><span id="dot"></span> <span id="status">подключение...</span></div>
+  <div class="status-dot" id="statusDot" title="Статус подключения"></div>
 
-  <div id="list">
-    <div class="empty">Ждём сообщения в чате...</div>
+  <!-- ── SETUP SCREEN: shown once, until the streamer connects their DonationAlerts account ── -->
+  <div class="setup" id="setup">
+    <h2>🔌 Подключение ДОНАТОФОНА к DonationAlerts</h2>
+    <ol>
+      <li>Открой <a href="https://www.donationalerts.com/application/clients" target="_blank" rel="noopener">donationalerts.com/application/clients</a> и создай приложение (Application).</li>
+      <li>В поле <b>Redirect URI</b> впиши точно вот эту ссылку — адрес, по которому открыт этот файл прямо сейчас:<br><code id="redirectUriShow" style="word-break:break-all;color:#9fc8ff"></code></li>
+      <li>Скопируй <b>Client ID</b> созданного приложения и вставь его ниже.</li>
+    </ol>
+    <input id="clientIdInput" placeholder="Client ID приложения" autocomplete="off">
+    <button id="loginBtn">Войти через DonationAlerts</button>
+    <div class="hint">Client ID и токен сохраняются в этом браузере — при перезагрузке страницы (в т.ч. в OBS) повторно входить не понадобится.</div>
   </div>
 
-  <div id="footer">
-    <span id="totalMsgs">Сообщений: 0</span>
-    <span id="totalUsers">Чаттеров: 0</span>
+  <!-- ── MAIN WIDGET: shown after successful connection ── -->
+  <div class="hidden" id="widget">
+    <h1>Донатофон<span class="and">И ВРЕМЯ</span></h1>
+    <div class="clock" id="clock">--:--:--<span class="date" id="clockDate"></span></div>
+    <div class="phone-wrap"><div class="phone" id="phoneIcon">☎️</div></div>
+    <div class="card" id="card"><div class="empty">Ждём первый донат…</div></div>
+    <div class="history" id="history"></div>
   </div>
-</div>
 
 <script>
-/* ============================================================
-   TOP 3 CHATTERS WIDGET — grishatripak
-   Подключается анонимно к Twitch IRC (WebSocket), считает
-   количество сообщений каждого зрителя за текущую сессию
-   (т.е. за стрим — счётчик сбрасывается при перезагрузке
-   источника в OBS) и показывает live топ-3.
-   ============================================================ */
+// ─────────────────────────────────────────────────────────────────────────
+// ДОНАТОФОН И ВРЕМЯ — real-time DonationAlerts widget for OBS.
+//
+// Uses DonationAlerts' OAuth 2.0 *Implicit Grant* (their own docs: "most
+// commonly used for JavaScript applications where client credentials can't
+// be securely stored") — so no server and no client_secret are needed here,
+// unlike the Authorization Code flow. After one manual login, the access
+// token is kept in localStorage, so reloading this page (e.g. OBS refreshing
+// the Browser Source) reconnects automatically instead of resetting.
+//
+// Real-time donations arrive over DonationAlerts' own Centrifugo WebSocket
+// (wss://centrifugo.donationalerts.com/connection/websocket), the same
+// mechanism their official alert widget itself uses — confirmed against
+// DonationAlerts' API docs and multiple working open-source integrations.
+// ─────────────────────────────────────────────────────────────────────────
 
-const CHANNEL = "grishatripak"; // канал для отслеживания
+const REDIRECT_URI = location.origin + location.pathname;
+const SCOPES = 'oauth-user-show oauth-donation-subscribe';
+const LS = {
+  clientId: 'donatofon_client_id',
+  token:    'donatofon_access_token',
+  last:     'donatofon_last_donation',
+  history:  'donatofon_history',
+};
 
-const stats = {};        // { login: { name, color, count } }
-let totalMessages = 0;
-let ws = null;
-let reconnectDelay = 1000;
-const MAX_RECONNECT_DELAY = 15000;
+const $ = (id) => document.getElementById(id);
+const setupEl = $('setup'), widgetEl = $('widget'), dot = $('statusDot');
 
-const dotEl = document.getElementById('dot');
-const statusEl = document.getElementById('status');
-const listEl = document.getElementById('list');
-const totalMsgsEl = document.getElementById('totalMsgs');
-const totalUsersEl = document.getElementById('totalUsers');
+$('redirectUriShow').textContent = REDIRECT_URI;
 
-function setStatus(text, live){
-  statusEl.textContent = text;
-  dotEl.classList.toggle('live', !!live);
+function setStatus(state) {
+  dot.className = 'status-dot' + (state === 'ok' ? ' on' : state === 'mid' ? ' mid' : '');
 }
 
-function connect(){
-  setStatus('подключение...', false);
-  ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+// ── 1. Pick up the token from the OAuth redirect (#access_token=...), or
+//       fall back to whatever's already saved from a previous session. ──
+function grabTokenFromUrl() {
+  if (!location.hash.includes('access_token')) return null;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const token = params.get('access_token');
+  if (token) {
+    localStorage.setItem(LS.token, token);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  return token;
+}
+
+function getSavedToken() {
+  return grabTokenFromUrl() || localStorage.getItem(LS.token);
+}
+
+// ── 2. Setup screen: remembers Client ID, builds the authorize link ──
+const savedClientId = localStorage.getItem(LS.clientId) || '';
+$('clientIdInput').value = savedClientId;
+
+function updateLoginBtn() {
+  $('loginBtn').disabled = !$('clientIdInput').value.trim();
+}
+$('clientIdInput').addEventListener('input', updateLoginBtn);
+updateLoginBtn();
+
+$('loginBtn').addEventListener('click', () => {
+  const clientId = $('clientIdInput').value.trim();
+  if (!clientId) return;
+  localStorage.setItem(LS.clientId, clientId);
+  const url = 'https://www.donationalerts.com/oauth/authorize?' + new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'token',
+    scope: SCOPES,
+  });
+  location.href = url;
+});
+
+// ── 3. Rendering: donation card, mini history, ringing animation, sound ──
+function renderDonation(d, { animate } = { animate: true }) {
+  const card = $('card');
+  const amount = `${Number(d.amount).toLocaleString('ru-RU')} ${d.currency || ''}`.trim();
+  card.innerHTML = `
+    <div class="from">Донат от</div>
+    <div class="name">${escapeHtml(d.username || 'Анонимно')}</div>
+    <div class="amount">${amount}</div>
+    ${d.message ? `<div class="msg">«${escapeHtml(d.message)}»</div>` : ''}`;
+  if (animate) {
+    card.classList.add('flash');
+    setTimeout(() => card.classList.remove('flash'), 900);
+    ringPhone();
+    playRingTone();
+  }
+}
+
+function renderHistory(list) {
+  $('history').innerHTML = list.slice(0, 5).map(d => `
+    <div class="row"><span>${escapeHtml(d.username || 'Анонимно')}</span><b>${Number(d.amount).toLocaleString('ru-RU')} ${d.currency||''}</b></div>
+  `).join('');
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function ringPhone() {
+  const p = $('phoneIcon');
+  p.classList.remove('ring'); void p.offsetWidth; p.classList.add('ring');
+}
+
+// A tiny synthesized old-telephone "ring-ring" — no external audio file needed.
+function playRingTone() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.3].forEach(offset => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 950;
+      g.gain.value = 0.0001;
+      o.connect(g); g.connect(ctx.destination);
+      const t = ctx.currentTime + offset;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.start(t); o.stop(t + 0.24);
+    });
+  } catch (e) { /* audio not available, ignore */ }
+}
+
+// ── 4. Persisted state: restore last donation + history immediately, so a
+//       page reload shows what we already know before the socket reconnects. ──
+function loadPersisted() {
+  try {
+    const last = JSON.parse(localStorage.getItem(LS.last) || 'null');
+    const hist = JSON.parse(localStorage.getItem(LS.history) || '[]');
+    if (last) renderDonation(last, { animate: false });
+    renderHistory(hist);
+  } catch (e) {}
+}
+
+function persistDonation(d) {
+  localStorage.setItem(LS.last, JSON.stringify(d));
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(LS.history) || '[]'); } catch(e) {}
+  hist.unshift(d);
+  hist = hist.slice(0, 20);
+  localStorage.setItem(LS.history, JSON.stringify(hist));
+  renderHistory(hist);
+}
+
+// ── 5. DonationAlerts REST + Centrifugo WebSocket wiring ──
+let ws = null, reconnectTimer = null, currentToken = null, currentUserId = null;
+
+async function daFetch(path, token, opts = {}) {
+  const res = await fetch(`https://www.donationalerts.com${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) },
+  });
+  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+  return res.json();
+}
+
+async function connectDA(token) {
+  currentToken = token;
+  setStatus('mid');
+  let user;
+  try {
+    user = (await daFetch('/api/v1/user/oauth', token)).data;
+  } catch (e) {
+    console.warn('Токен недействителен, нужен повторный вход:', e);
+    localStorage.removeItem(LS.token);
+    showSetup();
+    return;
+  }
+  currentUserId = user.id;
+  openSocket(user.socket_connection_token, user.id);
+}
+
+function openSocket(socketToken, userId) {
+  if (ws) { try { ws.close(); } catch(e){} }
+  ws = new WebSocket('wss://centrifugo.donationalerts.com/connection/websocket');
 
   ws.onopen = () => {
-    const nick = 'justinfan' + Math.floor(10000 + Math.random()*89999);
-    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-    ws.send('PASS SCHMOOPIIE');
-    ws.send('NICK ' + nick);
-    ws.send('JOIN #' + CHANNEL.toLowerCase());
+    ws.send(JSON.stringify({ params: { token: socketToken }, id: 1 }));
   };
 
-  ws.onmessage = (event) => {
-    const lines = event.data.split('\r\n').filter(Boolean);
-    for(const line of lines){
-      handleLine(line);
+  ws.onmessage = async (ev) => {
+    let msg; try { msg = JSON.parse(ev.data); } catch(e) { return; }
+
+    // Step 1 reply: connected, gives us the Centrifugo client id we need
+    // to request a subscription token for the donations channel.
+    if (msg.id === 1 && msg.result && msg.result.client) {
+      setStatus('ok');
+      try {
+        const channel = `$alerts:donation_${userId}`;
+        const sub = await daFetch('/api/v1/centrifuge/subscribe', currentToken, {
+          method: 'POST',
+          body: JSON.stringify({ channels: [channel], client: msg.result.client }),
+        });
+        const ch = (sub.channels || []).find(c => c.channel === channel);
+        if (ch) {
+          ws.send(JSON.stringify({ params: { channel: ch.channel, token: ch.token }, method: 1, id: 2 }));
+        }
+      } catch (e) { console.warn('Не удалось подписаться на канал донатов:', e); }
+      return;
+    }
+
+    // Incoming donation push.
+    if (msg.result && msg.result.type === 1 && msg.result.data) {
+      const d = msg.result.data;
+      persistDonation(d);
+      renderDonation(d, { animate: true });
     }
   };
 
-  ws.onclose = () => {
-    setStatus('отключено, переподключение...', false);
-    scheduleReconnect();
-  };
-
-  ws.onerror = () => {
-    setStatus('ошибка соединения...', false);
-    try{ ws.close(); }catch(e){}
-  };
+  ws.onclose = () => { setStatus('bad'); scheduleReconnect(); };
+  ws.onerror = () => { setStatus('bad'); };
 }
 
-function scheduleReconnect(){
-  setTimeout(connect, reconnectDelay);
-  reconnectDelay = Math.min(reconnectDelay * 1.6, MAX_RECONNECT_DELAY);
+function scheduleReconnect() {
+  clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(() => { if (currentToken) connectDA(currentToken); }, 4000);
 }
 
-function handleLine(line){
-  // PING keepalive
-  if(line.startsWith('PING')){
-    ws.send('PONG :tmi.twitch.tv');
-    return;
-  }
-
-  // Successful join confirmation
-  if(line.includes(' 366 ') || line.includes('JOIN #')){
-    setStatus('в эфире — ' + CHANNEL, true);
-    reconnectDelay = 1000;
-  }
-
-  if(line.includes('PRIVMSG')){
-    const msg = parsePrivmsg(line);
-    if(msg) registerMessage(msg);
-  }
+// ── 6. Live clock ──
+function tickClock() {
+  const now = new Date();
+  $('clock').firstChild.textContent = now.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  $('clockDate').textContent = now.toLocaleDateString('ru-RU', { day:'numeric', month:'long', weekday:'long' });
 }
 
-function parsePrivmsg(line){
-  // @tags :nick!user@host PRIVMSG #channel :message
-  let tags = {};
-  let rest = line;
+// ── 7. Boot ──
+function showSetup() { setupEl.classList.remove('hidden'); widgetEl.classList.add('hidden'); }
+function showWidget() { setupEl.classList.add('hidden'); widgetEl.classList.remove('hidden'); }
 
-  if(line.startsWith('@')){
-    const spaceIdx = line.indexOf(' ');
-    const tagStr = line.slice(1, spaceIdx);
-    rest = line.slice(spaceIdx + 1);
-    tagStr.split(';').forEach(pair => {
-      const eq = pair.indexOf('=');
-      if(eq > -1){
-        tags[pair.slice(0, eq)] = pair.slice(eq + 1);
-      }
-    });
-  }
-
-  const match = rest.match(/^:([^!]+)!/);
-  if(!match) return null;
-  const login = match[1].toLowerCase();
-
-  const displayName = tags['display-name'] && tags['display-name'].length
-    ? tags['display-name']
-    : login;
-  const color = tags['color'] && tags['color'].length ? tags['color'] : null;
-
-  return { login, displayName, color };
-}
-
-function registerMessage(msg){
-  if(!stats[msg.login]){
-    stats[msg.login] = { name: msg.displayName, color: msg.color, count: 0 };
-  }
-  stats[msg.login].name = msg.displayName;
-  if(msg.color) stats[msg.login].color = msg.color;
-  stats[msg.login].count += 1;
-  totalMessages += 1;
-
-  render();
-}
-
-function fallbackColor(seed){
-  // стабильный псевдо-цвет для юзеров без color-тега
-  const palette = ['#9146FF','#bf94ff','#00e5ff','#ff7ce0','#ffd23f','#ff6b6b','#6bd8ff'];
-  let hash = 0;
-  for(let i=0;i<seed.length;i++) hash = seed.charCodeAt(i) + ((hash<<5)-hash);
-  return palette[Math.abs(hash) % palette.length];
-}
-
-let lastRenderKey = '';
-
-function render(){
-  const entries = Object.entries(stats)
-    .map(([login, v]) => ({ login, ...v }))
-    .sort((a,b) => b.count - a.count)
-    .slice(0, 3);
-
-  // избегаем лишних перерисовок бара при одинаковом состоянии
-  const key = entries.map(e => e.login + ':' + e.count).join('|');
-
-  totalMsgsEl.textContent = 'Сообщений: ' + totalMessages;
-  totalUsersEl.textContent = 'Чаттеров: ' + Object.keys(stats).length;
-
-  if(entries.length === 0){
-    listEl.innerHTML = '<div class="empty">Ждём сообщения в чате...</div>';
-    return;
-  }
-
-  const maxCount = entries[0].count || 1;
-  const medals = ['r1','r2','r3'];
-  const rankNum = ['1','2','3'];
-
-  listEl.innerHTML = entries.map((e, i) => {
-    const pct = Math.max(8, Math.round((e.count / maxCount) * 100));
-    const color = e.color || fallbackColor(e.login);
-    return `
-      <div class="row">
-        <div class="bar" style="width:${pct}%"></div>
-        <div class="rank ${medals[i]}">${rankNum[i]}</div>
-        <div class="info">
-          <div class="name" style="color:${color}">${escapeHtml(e.name)}</div>
-        </div>
-        <div class="count">${e.count}</div>
-      </div>
-    `;
-  }).join('');
-
-  lastRenderKey = key;
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-connect();
+(function boot() {
+  const token = getSavedToken();
+  if (!token) { showSetup(); return; }
+  showWidget();
+  loadPersisted();
+  tickClock();
+  setInterval(tickClock, 1000);
+  connectDA(token);
+})();
 </script>
 </body>
 </html>
