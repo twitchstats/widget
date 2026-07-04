@@ -1,211 +1,337 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twitch Chat Top 3 — OBS Widget</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<title>TOP 3 CHATTERS — grishatripak</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Rubik:wght@500;700&display=swap');
 
-    body, html {
-      background: transparent;
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-    }
+  :root{
+    --accent:#9146FF;
+    --accent2:#bf94ff;
+    --gold:#FFD700;
+    --silver:#C0C0C0;
+    --bronze:#CD7F32;
+    --bg:transparent;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background: var(--bg);
+    font-family:'Rubik', sans-serif;
+    overflow:hidden;
+  }
+  #wrap{
+    width:420px;
+    padding:18px 20px 20px 20px;
+    position:relative;
+  }
+  #title{
+    font-family:'Montserrat', sans-serif;
+    font-weight:900;
+    font-size:22px;
+    letter-spacing:1px;
+    color:#fff;
+    text-transform:uppercase;
+    text-shadow: 0 0 8px var(--accent2), 0 0 18px rgba(145,70,255,0.6);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #subtitle{
+    font-size:12px;
+    color:#c7aeff;
+    margin-top:2px;
+    margin-bottom:14px;
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  #dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#ff4444;
+    box-shadow:0 0 6px #ff4444;
+    transition:all .3s ease;
+  }
+  #dot.live{
+    background:var(--accent2);
+    box-shadow:0 0 8px var(--accent2), 0 0 16px var(--accent2);
+    animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; }
+    50%{ opacity:0.4; }
+  }
 
-    #root {
-      padding: 12px;
-      min-width: 300px;
-      max-width: 360px;
-      background: transparent;
-    }
+  .row{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:linear-gradient(90deg, rgba(28,18,45,0.85), rgba(18,12,28,0.55));
+    border:1px solid rgba(145,70,255,0.3);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:10px;
+    overflow:hidden;
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+  .row:hover{ transform: translateX(2px); }
+  .row .bar{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    background:linear-gradient(90deg, rgba(145,70,255,0.4), rgba(191,148,255,0.08));
+    width:0%;
+    transition: width .6s cubic-bezier(.22,1,.36,1);
+    z-index:0;
+  }
+  .rank{
+    font-family:'Montserrat', sans-serif;
+    font-weight:900;
+    font-size:20px;
+    width:30px;
+    text-align:center;
+    z-index:1;
+  }
+  .rank.r1{ color:var(--gold); text-shadow:0 0 10px rgba(255,215,0,0.8); }
+  .rank.r2{ color:var(--silver); text-shadow:0 0 8px rgba(192,192,192,0.7); }
+  .rank.r3{ color:var(--bronze); text-shadow:0 0 8px rgba(205,127,50,0.7); }
 
-    #title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #adadb8;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 8px;
-      padding-left: 4px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    }
-
-    #list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(14, 14, 16, 0.88);
-      border-radius: 8px;
-      padding: 10px 14px;
-      backdrop-filter: blur(8px);
-      animation: slideIn 0.4s ease both;
-      border-left-width: 3px;
-      border-left-style: solid;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-16px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    .medal {
-      font-size: 20px;
-      flex-shrink: 0;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
-    }
-
-    .name {
-      font-size: 15px;
-      font-weight: 700;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-    }
-
-    .count {
-      font-size: 14px;
-      font-weight: 800;
-      color: #9147ff;
-      flex-shrink: 0;
-      text-shadow: 0 0 8px #9147ff66;
-    }
-
-    #waiting {
-      background: rgba(14, 14, 16, 0.85);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: #adadb8;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
-    }
-
-    #waiting strong { color: #9147ff; }
-  </style>
+  .info{
+    flex:1;
+    z-index:1;
+    min-width:0;
+  }
+  .name{
+    font-weight:700;
+    font-size:15px;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-shadow:0 1px 2px rgba(0,0,0,0.6);
+  }
+  .count{
+    font-family:'Montserrat', sans-serif;
+    font-weight:800;
+    font-size:16px;
+    color:var(--accent2);
+    z-index:1;
+    text-shadow:0 0 6px rgba(145,70,255,0.5);
+    min-width:34px;
+    text-align:right;
+  }
+  .empty{
+    color:#8a76b3;
+    font-size:13px;
+    font-style:italic;
+    padding:6px 4px 2px 4px;
+  }
+  #footer{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:#a894d1;
+    margin-top:6px;
+    letter-spacing:0.4px;
+  }
+</style>
 </head>
 <body>
-<div id="root">
-  <div id="title">💬 Топ чаттеров</div>
+
+<div id="wrap">
+  <div id="title">TOP 3 ЧАТТЕРА</div>
+  <div id="subtitle"><span id="dot"></span> <span id="status">подключение...</span></div>
+
   <div id="list">
-    <div id="waiting">Подключение к чату...</div>
+    <div class="empty">Ждём сообщения в чате...</div>
+  </div>
+
+  <div id="footer">
+    <span id="totalMsgs">Сообщений: 0</span>
+    <span id="totalUsers">Чаттеров: 0</span>
   </div>
 </div>
 
 <script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
-  // Канал берётся из ?channel=xxx в URL. Если не задан — grishatripak
-  const params = new URLSearchParams(location.search);
-  const CHANNEL = (params.get('channel') || 'grishatripak').toLowerCase();
+/* ============================================================
+   TOP 3 CHATTERS WIDGET — grishatripak
+   Подключается анонимно к Twitch IRC (WebSocket), считает
+   количество сообщений каждого зрителя за текущую сессию
+   (т.е. за стрим — счётчик сбрасывается при перезагрузке
+   источника в OBS) и показывает live топ-3.
+   ============================================================ */
 
-  const MEDALS      = ['🥇', '🥈', '🥉'];
-  const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
-  const MEDAL_GLOW  = [
-    '0 0 12px #FFD70088',
-    '0 0 12px #C0C0C088',
-    '0 0 12px #CD7F3288',
-  ];
+const CHANNEL = "grishatripak"; // канал для отслеживания
 
-  // ── STATE ─────────────────────────────────────────────────────────────────
-  const chatters = {};   // { username: { displayName, count, color } }
+const stats = {};        // { login: { name, color, count } }
+let totalMessages = 0;
+let ws = null;
+let reconnectDelay = 1000;
+const MAX_RECONNECT_DELAY = 15000;
 
-  // ── DOM ───────────────────────────────────────────────────────────────────
-  const listEl = document.getElementById('list');
+const dotEl = document.getElementById('dot');
+const statusEl = document.getElementById('status');
+const listEl = document.getElementById('list');
+const totalMsgsEl = document.getElementById('totalMsgs');
+const totalUsersEl = document.getElementById('totalUsers');
 
-  function render() {
-    const top3 = Object.values(chatters)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
+function setStatus(text, live){
+  statusEl.textContent = text;
+  dotEl.classList.toggle('live', !!live);
+}
 
-    if (top3.length === 0) {
-      listEl.innerHTML = `<div id="waiting">Ждём сообщений в <strong>#${CHANNEL}</strong></div>`;
-      return;
+function connect(){
+  setStatus('подключение...', false);
+  ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+  ws.onopen = () => {
+    const nick = 'justinfan' + Math.floor(10000 + Math.random()*89999);
+    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    ws.send('PASS SCHMOOPIIE');
+    ws.send('NICK ' + nick);
+    ws.send('JOIN #' + CHANNEL.toLowerCase());
+  };
+
+  ws.onmessage = (event) => {
+    const lines = event.data.split('\r\n').filter(Boolean);
+    for(const line of lines){
+      handleLine(line);
     }
+  };
 
-    listEl.innerHTML = top3.map((c, i) => `
-      <div class="row" style="
-        border-left-color: ${MEDAL_COLORS[i]};
-        box-shadow: ${MEDAL_GLOW[i]};
-        animation-delay: ${i * 0.1}s;
-      ">
-        <span class="medal">${MEDALS[i]}</span>
-        <span class="name" style="color:${c.color || '#dedee3'}">${escHtml(c.displayName)}</span>
-        <span class="count">${c.count.toLocaleString()}</span>
-      </div>
-    `).join('');
+  ws.onclose = () => {
+    setStatus('отключено, переподключение...', false);
+    scheduleReconnect();
+  };
+
+  ws.onerror = () => {
+    setStatus('ошибка соединения...', false);
+    try{ ws.close(); }catch(e){}
+  };
+}
+
+function scheduleReconnect(){
+  setTimeout(connect, reconnectDelay);
+  reconnectDelay = Math.min(reconnectDelay * 1.6, MAX_RECONNECT_DELAY);
+}
+
+function handleLine(line){
+  // PING keepalive
+  if(line.startsWith('PING')){
+    ws.send('PONG :tmi.twitch.tv');
+    return;
   }
 
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Successful join confirmation
+  if(line.includes(' 366 ') || line.includes('JOIN #')){
+    setStatus('в эфире — ' + CHANNEL, true);
+    reconnectDelay = 1000;
   }
 
-  // ── TWITCH IRC ────────────────────────────────────────────────────────────
-  function connect() {
-    const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+  if(line.includes('PRIVMSG')){
+    const msg = parsePrivmsg(line);
+    if(msg) registerMessage(msg);
+  }
+}
 
-    ws.onopen = () => {
-      ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-      ws.send(`NICK justinfan${Math.floor(Math.random() * 99999)}`);
-      ws.send(`JOIN #${CHANNEL}`);
-    };
+function parsePrivmsg(line){
+  // @tags :nick!user@host PRIVMSG #channel :message
+  let tags = {};
+  let rest = line;
 
-    ws.onmessage = (event) => {
-      const lines = event.data.split('\r\n');
-      for (const line of lines) {
-        if (!line) continue;
-
-        if (line.startsWith('PING')) {
-          ws.send('PONG :tmi.twitch.tv');
-          continue;
-        }
-
-        let tags = {};
-        let rest = line;
-
-        if (line.startsWith('@')) {
-          const si = line.indexOf(' ');
-          const tagStr = line.slice(1, si);
-          rest = line.slice(si + 1);
-          for (const part of tagStr.split(';')) {
-            const eq = part.indexOf('=');
-            if (eq !== -1) tags[part.slice(0, eq)] = part.slice(eq + 1);
-          }
-        }
-
-        if (rest.includes('PRIVMSG')) {
-          const m = rest.match(/^:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)$/);
-          if (!m) continue;
-
-          const username    = m[1].toLowerCase();
-          const displayName = tags['display-name'] || username;
-          const color       = tags['color'] || undefined;
-
-          const prev = chatters[username];
-          chatters[username] = {
-            displayName,
-            count: (prev ? prev.count : 0) + 1,
-            color: color || (prev && prev.color),
-          };
-
-          render();
-        }
+  if(line.startsWith('@')){
+    const spaceIdx = line.indexOf(' ');
+    const tagStr = line.slice(1, spaceIdx);
+    rest = line.slice(spaceIdx + 1);
+    tagStr.split(';').forEach(pair => {
+      const eq = pair.indexOf('=');
+      if(eq > -1){
+        tags[pair.slice(0, eq)] = pair.slice(eq + 1);
       }
-    };
-
-    ws.onclose = () => setTimeout(connect, 5000); // авто-переподключение
-    ws.onerror = () => ws.close();
+    });
   }
 
-  connect();
+  const match = rest.match(/^:([^!]+)!/);
+  if(!match) return null;
+  const login = match[1].toLowerCase();
+
+  const displayName = tags['display-name'] && tags['display-name'].length
+    ? tags['display-name']
+    : login;
+  const color = tags['color'] && tags['color'].length ? tags['color'] : null;
+
+  return { login, displayName, color };
+}
+
+function registerMessage(msg){
+  if(!stats[msg.login]){
+    stats[msg.login] = { name: msg.displayName, color: msg.color, count: 0 };
+  }
+  stats[msg.login].name = msg.displayName;
+  if(msg.color) stats[msg.login].color = msg.color;
+  stats[msg.login].count += 1;
+  totalMessages += 1;
+
   render();
+}
+
+function fallbackColor(seed){
+  // стабильный псевдо-цвет для юзеров без color-тега
+  const palette = ['#9146FF','#bf94ff','#00e5ff','#ff7ce0','#ffd23f','#ff6b6b','#6bd8ff'];
+  let hash = 0;
+  for(let i=0;i<seed.length;i++) hash = seed.charCodeAt(i) + ((hash<<5)-hash);
+  return palette[Math.abs(hash) % palette.length];
+}
+
+let lastRenderKey = '';
+
+function render(){
+  const entries = Object.entries(stats)
+    .map(([login, v]) => ({ login, ...v }))
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 3);
+
+  // избегаем лишних перерисовок бара при одинаковом состоянии
+  const key = entries.map(e => e.login + ':' + e.count).join('|');
+
+  totalMsgsEl.textContent = 'Сообщений: ' + totalMessages;
+  totalUsersEl.textContent = 'Чаттеров: ' + Object.keys(stats).length;
+
+  if(entries.length === 0){
+    listEl.innerHTML = '<div class="empty">Ждём сообщения в чате...</div>';
+    return;
+  }
+
+  const maxCount = entries[0].count || 1;
+  const medals = ['r1','r2','r3'];
+  const rankNum = ['1','2','3'];
+
+  listEl.innerHTML = entries.map((e, i) => {
+    const pct = Math.max(8, Math.round((e.count / maxCount) * 100));
+    const color = e.color || fallbackColor(e.login);
+    return `
+      <div class="row">
+        <div class="bar" style="width:${pct}%"></div>
+        <div class="rank ${medals[i]}">${rankNum[i]}</div>
+        <div class="info">
+          <div class="name" style="color:${color}">${escapeHtml(e.name)}</div>
+        </div>
+        <div class="count">${e.count}</div>
+      </div>
+    `;
+  }).join('');
+
+  lastRenderKey = key;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+connect();
 </script>
 </body>
 </html>
