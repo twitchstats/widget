@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>TOP 3 CHATTERS — H4KEREED</title>
+<title>TOP 3 CHATTERS WEEKLY — H4KEREED</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Rubik:wght@500;700&display=swap');
 
@@ -154,18 +154,14 @@
 </div>
 
 <script>
-/* ============================================================
-   TOP 3 CHATTERS WIDGET 
-   Подключается анонимно к Twitch IRC (WebSocket), считает
-   количество сообщений каждого зрителя за текущую сессию
-   (т.е. счетчик сбрасывается при перезагрузке источника в OBS) 
-   и показывает live топ-3.
-   ============================================================ */
+const CHANNEL = "h4kereed"; 
+const STORAGE_KEY = "twitch_top3_h4kereed";
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-const CHANNEL = "h4kereed"; // канал для отслеживания
-
-const stats = {};        // { login: { name, color, count } }
+let stats = {};        
 let totalMessages = 0;
+let weekStart = Date.now();
+
 let ws = null;
 let reconnectDelay = 1000;
 const MAX_RECONNECT_DELAY = 15000;
@@ -175,6 +171,47 @@ const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
 const totalMsgsEl = document.getElementById('totalMsgs');
 const totalUsersEl = document.getElementById('totalUsers');
+
+// Загрузка данных из памяти
+function loadStats() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Date.now() - parsed.weekStart > ONE_WEEK_MS) {
+        // Прошло 7 дней — сбрасываем
+        resetStats();
+      } else {
+        stats = parsed.stats || {};
+        totalMessages = parsed.totalMessages || 0;
+        weekStart = parsed.weekStart || Date.now();
+      }
+    }
+  } catch(e) {
+    console.error("Ошибка загрузки сохранений", e);
+  }
+}
+
+// Сохранение данных в память
+function saveStats() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      stats,
+      totalMessages,
+      weekStart
+    }));
+  } catch(e) {
+    console.error("Ошибка сохранения", e);
+  }
+}
+
+function resetStats() {
+  stats = {};
+  totalMessages = 0;
+  weekStart = Date.now();
+  saveStats();
+  render();
+}
 
 function setStatus(text, live){
   statusEl.textContent = text;
@@ -217,13 +254,11 @@ function scheduleReconnect(){
 }
 
 function handleLine(line){
-  // PING keepalive
   if(line.startsWith('PING')){
     ws.send('PONG :tmi.twitch.tv');
     return;
   }
 
-  // Successful join confirmation
   if(line.includes(' 366 ') || line.includes('JOIN #')){
     setStatus('в эфире — ' + CHANNEL.toUpperCase(), true);
     reconnectDelay = 1000;
@@ -236,7 +271,6 @@ function handleLine(line){
 }
 
 function parsePrivmsg(line){
-  // @tags :nick!user@host PRIVMSG #channel :message
   let tags = {};
   let rest = line;
 
@@ -256,15 +290,25 @@ function parsePrivmsg(line){
   if(!match) return null;
   const login = match[1].toLowerCase();
 
+  const msgMatch = rest.match(/PRIVMSG #[^ ]+ :(.*)/);
+  const text = msgMatch ? msgMatch[1] : '';
+
   const displayName = tags['display-name'] && tags['display-name'].length
     ? tags['display-name']
     : login;
   const color = tags['color'] && tags['color'].length ? tags['color'] : null;
 
-  return { login, displayName, color };
+  return { login, displayName, color, text };
 }
 
 function registerMessage(msg){
+  // Ручной сброс топа командой !resettop от стримера
+  if(msg.text.trim() === '!resettop' && msg.login === CHANNEL.toLowerCase()) {
+    resetStats();
+    return; // Не считаем команду сброса за обычное сообщение
+  }
+
+  // Обновление статы
   if(!stats[msg.login]){
     stats[msg.login] = { name: msg.displayName, color: msg.color, count: 0 };
   }
@@ -273,11 +317,11 @@ function registerMessage(msg){
   stats[msg.login].count += 1;
   totalMessages += 1;
 
+  saveStats();
   render();
 }
 
 function fallbackColor(seed){
-  // стабильный псевдо-цвет для юзеров без color-тега
   const palette = ['#9146FF','#bf94ff','#00e5ff','#ff7ce0','#ffd23f','#ff6b6b','#6bd8ff'];
   let hash = 0;
   for(let i=0;i<seed.length;i++) hash = seed.charCodeAt(i) + ((hash<<5)-hash);
@@ -292,7 +336,6 @@ function render(){
     .sort((a,b) => b.count - a.count)
     .slice(0, 3);
 
-  // избегаем лишних перерисовок бара при одинаковом состоянии
   const key = entries.map(e => e.login + ':' + e.count).join('|');
 
   totalMsgsEl.textContent = 'Сообщений: ' + totalMessages;
@@ -331,6 +374,9 @@ function escapeHtml(str){
   return d.innerHTML;
 }
 
+// Загружаем статистику перед подключением
+loadStats();
+render();
 connect();
 </script>
 </body>
